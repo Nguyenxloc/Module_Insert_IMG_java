@@ -13,27 +13,32 @@ import model.Account;
  * @author 84374
  */
 public class AccountService {
-    
+
     public AccountService() {
     }
-    
-    public void save(Account acc){
+
+    public void save(Account acc) {
         AccountDAO accDAO = new AccountDAO();
         accDAO.save(acc);
     }
-    
-    public ArrayList<Account> loadAll(){
+
+    public ArrayList<Account> loadAll() {
         AccountDAO accDAO = new AccountDAO();
         return accDAO.loadAll();
     }
-    
-    public Account loadByID(String id){
+
+    public Account loadByID(String id) {
         AccountDAO accDAO = new AccountDAO();
         return accDAO.loadByID(id);
     }
-    
-    public void delete(String id){
+
+    public void delete(String id) {
         AccountDAO accDAO = new AccountDAO();
         accDAO.deleteByID(id);
+    }
+
+    public void update(Account acc) {
+        AccountDAO accDAO = new AccountDAO();
+        accDAO.update(acc);
     }
 }

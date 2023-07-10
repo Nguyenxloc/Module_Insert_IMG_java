@@ -19,7 +19,7 @@ public class DBConnection {//Lớp này giải quyết kết nối xử lý truy
     private static String hostName = "localhost";
     private static String acc = "sa";
     private static String pass = "123456";
-    private static String dbName = "COFFEESHOP_DA1";
+    private static String dbName = "InsertImageModule";
     private static String connectionSql
             = "jdbc:sqlserver://" + hostName + ":1433;databaseName=" + dbName+";user="+acc+ ";password="+pass+";encrypt=false";
     private static String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
@@ -38,7 +38,8 @@ public class DBConnection {//Lớp này giải quyết kết nối xử lý truy
         try {
             System.out.println(connectionSql);
             return DriverManager.getConnection(connectionSql, acc, pass);
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
             return null;
         }
     }
@@ -52,7 +53,8 @@ public class DBConnection {//Lớp này giải quyết kết nối xử lý truy
             } finally {
                 pstm.close();
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
             System.out.println("Lỗi tại ExcuteDungna");
             return 0;
         }
@@ -75,7 +77,8 @@ public class DBConnection {//Lớp này giải quyết kết nối xử lý truy
                 ps.setObject(i + 1, args[i]);//Cộng các value sau câu truy vấn
             }
             return ps;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
+            ex.printStackTrace();
             return null;
         }
     }

@@ -46,20 +46,25 @@ public class AccountDAO {
 
     public Account loadByID(String id) {
         DBConnection dbConn = new DBConnection();
-        Account acc=null ;
+        Account acc = null;
         try {
             ResultSet rs = dbConn.getDataFromQuery(SELECT_BY_SQL, id);
-            acc = new Account(rs.getString("ID"),rs.getString("NameAcc"),rs.getDate("DOB"),rs.getString("GENDER"),rs.getBytes("IMG"));
+            acc = new Account(rs.getString("ID"), rs.getString("NameAcc"), rs.getDate("DOB"), rs.getString("GENDER"), rs.getBytes("IMG"));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
-        return  acc;
+
+        return acc;
     }
 
     public void deleteByID(String id) {
         DBConnection dbConn = new DBConnection();
-        dbConn.ExcuteDungna(DELETE_SQL,id);
-        
+        dbConn.ExcuteDungna(DELETE_SQL, id);
+
+    }
+
+    public void update(Account acc) {
+        DBConnection dbConn = new DBConnection();
+        dbConn.ExcuteDungna(UPDATE_SQL, acc.getName(), acc.getDOB(), acc.getGender(), acc.getImg(),acc.getId());
     }
 }

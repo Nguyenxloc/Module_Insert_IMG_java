@@ -5,8 +5,19 @@
 package View;
 
 import Service.AccountService;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import jdk.jfr.Period;
+import model.Account;
 
 /**
  *
@@ -17,21 +28,117 @@ public class AppFrame extends javax.swing.JFrame {
     /**
      * Creates new form AppFrame
      */
+    ArrayList<Account> lstAccounts = new ArrayList<>();
     DefaultTableModel model = new DefaultTableModel();
     AccountService service = new AccountService();
-    String url = null;
-    
+    static String url = null;
+    byte[] imgBytes = new byte[5000];
+    int count = -1;
+
     public AppFrame() {
         initComponents();
+        loadToTable();
     }
-    public void convertURLToBytes(){
-        byte[] imgBytes = new byte[5000];
-        
+
+    public void convertURLToBytes() throws IOException {
+        String url = lblURL.getText();
+        BufferedImage bImage = ImageIO.read(new File(url.toString()));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageIO.write(bImage, "jpg", bos);
+        imgBytes = bos.toByteArray();
+    }
+
+    public void save() {
+        try {
+            convertURLToBytes();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi nhập ảnh !");
+        }
+        Account acc = new Account(null, txtName.getText(), Date.valueOf(txtDOB.getText()), txtGender.getText(), imgBytes);
+        try {
+            service.save(acc);
+            JOptionPane.showMessageDialog(this, "Thêm thành công !");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Thêm thất bại !");
+        }
+        loadToTable();
+    }
+    public void update(){
+        count = table.getSelectedRow();
+        System.out.println(imgBytes);
+        String mes ="";
+        try {
+            convertURLToBytes();
+        } catch (Exception e) {
+            e.printStackTrace();
+            mes+="\n Lỗi nhập ảnh";
+        }
+        System.out.println(lblURL.getText());
+        System.out.println(!lblURL.getText().equals(url));
+        if(!lblURL.getText().equals("#URL")){
+        Account acc = new Account(lstAccounts.get(count).getId(), txtName.getText(), Date.valueOf(txtDOB.getText()), txtGender.getText(),imgBytes);
+        try {
+            service.update(acc);
+            JOptionPane.showMessageDialog(this, "Cập nhật thành công !");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Cập nhật thất bại !");
+        }
+        loadToTable();
+        }
+        else{
+            mes+="\n Thêm thất bại !";
+            JOptionPane.showMessageDialog(this,mes);
+        }
+           
+    }
+    public void delete(){
+         count = table.getSelectedRow();
+         try {
+             service.delete(lstAccounts.get(count).getId());
+             JOptionPane.showMessageDialog(this,"Xóa thành công !");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,"Vui lòng chọn tài khoản muốn xóa");
+            e.printStackTrace();
+        }
+        loadToTable();
+    }
+
+    public void clear() {
+        lblID.setText("#id");
+        lblURL.setText("#URL");
+        txtName.setText("");
+        txtDOB.setText("");
+        txtGender.setText("");
+        imgBytes = null;
+        url = null;
     }
     
-    public void save(){
-        System.out.println("Link: "+url);
+    public void loadToTable(){
+       model = (DefaultTableModel) table.getModel();
+       model.setRowCount(0);
+       lstAccounts = service.loadAll();
+        for (Account acc : lstAccounts) {
+            model.addRow(new Object[]{acc.getName(),acc.getDOB(),acc.getGender(),acc.getImg()});
+        }
     }
+
+    public void showDetail() {
+        count=table.getSelectedRow();
+        lblID.setText(lstAccounts.get(count).getId());
+        txtName.setText(lstAccounts.get(count).getName());
+        txtDOB.setText(String.valueOf(lstAccounts.get(count).getDOB()));
+        txtGender.setText(lstAccounts.get(count).getGender());
+        lblAvatar.setText("");
+        ImageIcon  oriImgIcon = new ImageIcon(lstAccounts.get(count).getImg());
+        Image image = oriImgIcon.getImage(); // transform it
+        Image newimg = image.getScaledInstance(79,120,  java.awt.Image.SCALE_SMOOTH); // scale it the smooth way
+        ImageIcon imageIcon = new ImageIcon(newimg);
+        lblAvatar.setIcon(imageIcon);
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -51,7 +158,7 @@ public class AppFrame extends javax.swing.JFrame {
         txtDOB = new javax.swing.JTextField();
         txtGender = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
+        lblAvatar = new javax.swing.JLabel();
         btnClear = new javax.swing.JButton();
         btnSave = new javax.swing.JButton();
         btnDel = new javax.swing.JButton();
@@ -61,7 +168,7 @@ public class AppFrame extends javax.swing.JFrame {
         btnChooseFile = new javax.swing.JButton();
         lblURL = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
-        jLabel9 = new javax.swing.JLabel();
+        lblID = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -76,11 +183,21 @@ public class AppFrame extends javax.swing.JFrame {
 
         jLabel6.setText("Avatar:");
 
-        jLabel7.setText("#Avartar here");
+        lblAvatar.setText("#Avartar here");
 
         btnClear.setText("Clear");
+        btnClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnClearActionPerformed(evt);
+            }
+        });
 
         btnSave.setText("Save");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
 
         btnDel.setText("Delete");
         btnDel.addActionListener(new java.awt.event.ActionListener() {
@@ -90,6 +207,11 @@ public class AppFrame extends javax.swing.JFrame {
         });
 
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -102,6 +224,11 @@ public class AppFrame extends javax.swing.JFrame {
                 "Name", "DOB", "Gender", " Avatar"
             }
         ));
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tableMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(table);
 
         btnChooseFile.setText("Chọn ảnh");
@@ -117,7 +244,7 @@ public class AppFrame extends javax.swing.JFrame {
 
         jLabel8.setText("ID:");
 
-        jLabel9.setText("#IDUnidentifier");
+        lblID.setText("#IDUnidentifier");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -137,9 +264,9 @@ public class AppFrame extends javax.swing.JFrame {
                                     .addComponent(jLabel1)
                                     .addComponent(jLabel8))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 242, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(lblID, javax.swing.GroupLayout.PREFERRED_SIZE, 242, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(72, 72, 72)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(11, 11, 11))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -165,7 +292,7 @@ public class AppFrame extends javax.swing.JFrame {
                 .addGap(16, 16, 16))
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel9, txtDOB, txtGender, txtName});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {lblID, txtDOB, txtGender, txtName});
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {btnClear, btnDel, btnSave, btnUpdate});
 
@@ -181,7 +308,7 @@ public class AppFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel8)
-                            .addComponent(jLabel9))
+                            .addComponent(lblID))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(40, 40, 40)
@@ -205,7 +332,7 @@ public class AppFrame extends javax.swing.JFrame {
                                 .addComponent(btnClear))))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(21, 21, 21)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(lblAvatar, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(37, 37, 37)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -228,16 +355,37 @@ public class AppFrame extends javax.swing.JFrame {
 
     private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
         // TODO add your handling code here:
+        delete();
     }//GEN-LAST:event_btnDelActionPerformed
 
     private void btnChooseFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChooseFileActionPerformed
         // TODO add your handling code here:
-                java.awt.EventQueue.invokeLater(new Runnable() {
+        java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new ChooseFileFrame(url,lblURL).setVisible(true);
+                new ChooseFileFrame(url, lblURL).setVisible(true);
             }
         });
     }//GEN-LAST:event_btnChooseFileActionPerformed
+
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        // TODO add your handling code here:
+        save();
+    }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void btnClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearActionPerformed
+        // TODO add your handling code here:
+        clear();
+    }//GEN-LAST:event_btnClearActionPerformed
+
+    private void tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseClicked
+        // TODO add your handling code here:
+        showDetail();
+    }//GEN-LAST:event_tableMouseClicked
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        // TODO add your handling code here:
+        update();
+    }//GEN-LAST:event_btnUpdateActionPerformed
 
     /**
      * @param args the command line arguments
@@ -287,10 +435,10 @@ public class AppFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblAvatar;
+    private javax.swing.JLabel lblID;
     private javax.swing.JLabel lblURL;
     private javax.swing.JTable table;
     private javax.swing.JTextField txtDOB;
